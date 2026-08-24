@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FinPulse Engine | High-Frequency Algorithmic Trading & Real-Time Risk Platform</title>
+
+  <!-- Google Fonts: Orbitron, Inter, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Orbitron:wght@600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <!-- React 18 & Babel Standalone CDNs -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    :root {
+      --bg-terminal: #070a0f;
+      --card-bg: #0d121c;
+      --card-border: #1a2336;
+      --green-trade: #00e676;
+      --red-trade: #ff1744;
+      --cyan-accent: #00e5ff;
+      --gold-accent: #ffc400;
+      --purple-accent: #d500f9;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --font-heading: 'Orbitron', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-terminal);
+      color: var(--text-main);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.4;
+      overflow-x: hidden;
+    }
+
+    .font-heading { font-family: var(--font-heading); }
+    .font-mono { font-family: var(--font-mono); }
+
+    .container-fluid { max-width: 1560px; margin: 0 auto; padding: 0 16px; }
+
+    .cyber-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 18px;
+      box-shadow: 0 4px 25px rgba(0, 0, 0, 0.5);
+    }
+
+    .app-header {
+      background: #090e17;
+      border-bottom: 1px solid var(--card-border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 14px 0;
+    }
+
+    .header-flex { display: flex; justify-content: space-between; align-items: center; }
+
+    .brand-title {
+      font-family: var(--font-heading);
+      font-size: 1.25rem;
+      font-weight: 900;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .asset-tab {
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-family: var(--font-heading);
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      background: #151d2a;
+      color: var(--text-muted);
+      border: 1px solid var(--card-border);
+      transition: all 0.2s ease;
+    }
+
+    .asset-tab.active {
+      background: var(--cyan-accent);
+      color: #000;
+      border-color: var(--cyan-accent);
+      box-shadow: 0 0 12px rgba(0, 229, 255, 0.4);
+    }
+
+    .btn-buy {
+      background: var(--green-trade);
+      color: #000;
+      font-weight: 800;
+      padding: 8px 14px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-family: var(--font-heading);
+      font-size: 0.75rem;
+      transition: all 0.2s ease;
+    }
+    .btn-buy:hover { transform: translateY(-1px); box-shadow: 0 0 12px rgba(0, 230, 118, 0.4); }
+
+    .btn-sell {
+      background: var(--red-trade);
+      color: #fff;
+      font-weight: 800;
+      padding: 8px 14px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-family: var(--font-heading);
+      font-size: 0.75rem;
+      transition: all 0.2s ease;
+    }
+    .btn-sell:hover { transform: translateY(-1px); box-shadow: 0 0 12px rgba(255, 23, 68, 0.4); }
+
+    .btn-export {
+      background: #1e293b;
+      color: #fff;
+      border: 1px solid #334155;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-family: var(--font-heading);
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .btn-export:hover { background: #334155; }
+
+    .terminal-grid { display: grid; grid-template-columns: 1.6fr 0.8fr 0.6fr; gap: 16px; margin-bottom: 20px; }
+    .bottom-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+    @media (max-width: 1200px) {
+      .terminal-grid { grid-template-columns: 1fr; }
+      .bottom-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    const ASSETS = [
+      { symbol: 'BTC/USDT', name: 'Bitcoin / Tether', price: 68450.00, change: 3.42, type: 'CRYPTO' },
+      { symbol: 'ETH/USDT', name: 'Ethereum / Tether', price: 3520.50, change: 4.15, type: 'CRYPTO' },
+      { symbol: 'NVDA', name: 'NVIDIA Corp', price: 128.40, change: 5.60, type: 'EQUITY' },
+      { symbol: 'AAPL', name: 'Apple Inc', price: 224.30, change: -0.85, type: 'EQUITY' },
+      { symbol: 'EUR/USD', name: 'Euro / US Dollar', price: 1.0885, change: 0.12, type: 'FOREX' },
+    ];
+
+    function FinPulseTerminal() {
+      const [selectedSymbol, setSelectedSymbol] = useState('BTC/USDT');
+      const [candles, setCandles] = useState([]);
+      const [orderBook, setOrderBook] = useState({ bids: [], asks: [] });
+      const [trades, setTrades] = useState([]);
+      const [portfolio, setPortfolio] = useState({ balance: 250000.0, positionQty: 1.5, pnl: 4850.0, var95: 3290.0, sharpe: 2.45 });
+      const [orderType, setOrderType] = useState('LIMIT');
+      const [orderSide, setOrderSide] = useState('BUY');
+      const [orderQty, setOrderQty] = useState(0.25);
+      const [algoStrategy, setAlgoStrategy] = useState('VWAP');
+
+      const currentAsset = ASSETS.find(a => a.symbol === selectedSymbol) || ASSETS[0];
+
+      // Generate initial OHLCV candles
+      useEffect(() => {
+        let base = currentAsset.price;
+        const initial = [];
+        let time = Date.now() - 30 * 60 * 1000;
+        for (let i = 0; i < 30; i++) {
+          const open = base + (Math.random() - 0.5) * (base * 0.004);
+          const close = open + (Math.random() - 0.48) * (base * 0.005);
+          const high = Math.max(open, close) + Math.random() * (base * 0.003);
+          const low = Math.min(open, close) - Math.random() * (base * 0.003);
+          const volume = Math.floor(Math.random() * 50) + 10;
+          initial.push({ time, open, high, low, close, volume });
+          base = close;
+          time += 60 * 1000;
+        }
+        setCandles(initial);
+      }, [selectedSymbol]);
+
+      // Real-time tick generator (1s)
+      useEffect(() => {
+        const timer = setInterval(() => {
+          setCandles(prev => {
+            if (prev.length === 0) return prev;
+            const last = prev[prev.length - 1];
+            const change = (Math.random() - 0.49) * (last.close * 0.0015);
+            const newClose = last.close + change;
+            const newHigh = Math.max(last.high, newClose);
+            const newLow = Math.min(last.low, newClose);
+            const updated = [...prev];
+            updated[updated.length - 1] = { ...last, close: newClose, high: newHigh, low: newLow, volume: last.volume + 1 };
+            return updated;
+          });
+
+          // Generate L2 Order Book Depth
+          const p = currentAsset.price;
+          const bids = Array.from({ length: 8 }, (_, i) => ({ price: +(p - (i + 1) * (p * 0.0005)).toFixed(2), qty: +(Math.random() * 2 + 0.5).toFixed(2) }));
+          const asks = Array.from({ length: 8 }, (_, i) => ({ price: +(p + (i + 1) * (p * 0.0005)).toFixed(2), qty: +(Math.random() * 2 + 0.5).toFixed(2) }));
+          setOrderBook({ bids, asks });
+        }, 1000);
+        return () => clearInterval(timer);
+      }, [selectedSymbol, currentAsset.price]);
+
+      const handleSubmitOrder = (side) => {
+        const p = currentAsset.price;
+        const newTrade = {
+          id: 'TRD-' + Date.now().toString().slice(-6),
+          symbol: selectedSymbol,
+          side,
+          price: p,
+          qty: orderQty,
+          time: new Date().toLocaleTimeString()
+        };
+        setTrades(prev => [newTrade, ...prev.slice(0, 15)]);
+
+        setPortfolio(prev => ({
+          ...prev,
+          balance: side === 'BUY' ? prev.balance - p * orderQty : prev.balance + p * orderQty,
+          positionQty: side === 'BUY' ? prev.positionQty + orderQty : prev.positionQty - orderQty,
+          pnl: prev.pnl + (side === 'BUY' ? 120.0 : -80.0)
+        }));
+      };
+
+      const handleExportReport = () => {
+        const rows = [
+          ['Asset Symbol', 'Price', 'Position Qty', 'PnL ($)', '95% VaR ($)', 'Sharpe Ratio', 'Exported At'],
+          [selectedSymbol, currentAsset.price, portfolio.positionQty, portfolio.pnl, portfolio.var95, portfolio.sharpe, new Date().toISOString()]
+        ];
+        const csvContent = 'data:text/csv;charset=utf-8,' + rows.map(e => e.join(',')).join('\n');
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement('a');
+        link.setAttribute('href', encodedUri);
+        link.setAttribute('download', `FinPulse_Risk_Report_${Date.now()}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+
+      return (
+        <div>
+          {/* Header */}
+          <header className="app-header">
+            <div className="container-fluid header-flex">
+              <div className="brand-title">
+                <i className="fas fa-chart-line" style={{ color: 'var(--cyan-accent)' }}></i>
+                FIN<span>PULSE</span>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 500, marginLeft: '8px' }}>
+                  v1.0 Sub-Microsecond HFT Engine
+                </span>
+              </div>
+
+              {/* Asset Selector */}
+              <div style={{ display: 'flex', gap: '8px' }}>
+                {ASSETS.map(a => (
+                  <button key={a.symbol} onClick={() => setSelectedSymbol(a.symbol)} className={`asset-tab ${a.symbol === selectedSymbol ? 'active' : ''}`}>
+                    {a.symbol}
+                  </button>
+                ))}
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                <button onClick={handleExportReport} className="btn-export">
+                  <i className="fas fa-file-csv"></i> Export Risk Audit
+                </button>
+                <div style={{ fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}>
+                  Balance: <strong style={{ color: 'var(--green-trade)' }}>${portfolio.balance.toLocaleString()}</strong>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          {/* Main Grid */}
+          <main className="container-fluid" style={{ paddingTop: '20px', paddingBottom: '40px' }}>
+            <div className="terminal-grid">
+              {/* Candlestick & MACD Canvas */}
+              <CandlestickChartCard candles={candles} asset={currentAsset} />
+
+              {/* L2 Order Book Depth Ladder */}
+              <L2OrderBookCard bids={orderBook.bids} asks={orderBook.asks} price={currentAsset.price} />
+
+              {/* Order Execution Panel */}
+              <OrderExecutionPanel symbol={selectedSymbol} price={currentAsset.price} orderQty={orderQty} setOrderQty={setOrderQty} onOrder={handleSubmitOrder} algoStrategy={algoStrategy} setAlgoStrategy={setAlgoStrategy} />
+            </div>
+
+            {/* Bottom Row: Options Greeks, Monte Carlo VaR, Trade Stream */}
+            <div className="bottom-grid">
+              <OptionsGreeksCard spot={currentAsset.price} />
+              <MonteCarloVaRCard portfolio={portfolio} price={currentAsset.price} />
+              <TradeStreamCard trades={trades} />
+            </div>
+          </main>
+        </div>
+      );
+    }
+
+    // Canvas Candlestick & MACD Component
+    function CandlestickChartCard({ candles, asset }) {
+      const canvasRef = useRef(null);
+
+      useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas || candles.length === 0) return;
+        const ctx = canvas.getContext('2d');
+        const w = canvas.width;
+        const h = canvas.height;
+
+        ctx.clearRect(0, 0, w, h);
+        ctx.strokeStyle = '#1a2336';
+        ctx.lineWidth = 1;
+
+        // Grid lines
+        for (let x = 0; x < w; x += 50) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
+        for (let y = 0; y < h; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+
+        const minP = Math.min(...candles.map(c => c.low));
+        const maxP = Math.max(...candles.map(c => c.high));
+        const range = (maxP - minP) || 1;
+        const candleWidth = w / candles.length;
+
+        candles.forEach((c, i) => {
+          const x = i * candleWidth + candleWidth / 2;
+          const openY = h - ((c.open - minP) / range) * (h - 60) - 30;
+          const closeY = h - ((c.close - minP) / range) * (h - 60) - 30;
+          const highY = h - ((c.high - minP) / range) * (h - 60) - 30;
+          const lowY = h - ((c.low - minP) / range) * (h - 60) - 30;
+
+          const isBull = c.close >= c.open;
+          const color = isBull ? '#00e676' : '#ff1744';
+
+          // Wick
+          ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 1.5;
+          ctx.moveTo(x, highY); ctx.lineTo(x, lowY); ctx.stroke();
+
+          // Body
+          ctx.fillStyle = color;
+          const bodyY = Math.min(openY, closeY);
+          const bodyH = Math.max(Math.abs(closeY - openY), 2);
+          ctx.fillRect(x - candleWidth * 0.3, bodyY, candleWidth * 0.6, bodyH);
+        });
+      }, [candles]);
+
+      return (
+        <div className="cyber-card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <h3 className="font-heading" style={{ fontSize: '0.95rem', color: '#fff' }}>
+              <i className="fas fa-candlestick-chart" style={{ color: 'var(--cyan-accent)', marginRight: '8px' }}></i>
+              {asset.symbol} OHLCV Candlestick & Moving Averages
+            </h3>
+            <div className="font-mono" style={{ fontSize: '0.9rem', color: asset.change >= 0 ? 'var(--green-trade)' : 'var(--red-trade)' }}>
+              ${asset.price.toLocaleString()} ({asset.change >= 0 ? '+' : ''}{asset.change}%)
+            </div>
+          </div>
+          <div style={{ background: '#04060a', border: '1px solid #1a2336', borderRadius: '6px', padding: '6px' }}>
+            <canvas ref={canvasRef} width="700" height="280" style={{ width: '100%', height: '280px', display: 'block' }} />
+          </div>
+        </div>
+      );
+    }
+
+    // L2 Order Book Depth Ladder Component
+    function L2OrderBookCard({ bids, asks, price }) {
+      return (
+        <div className="cyber-card">
+          <h3 className="font-heading" style={{ fontSize: '0.95rem', color: '#fff', marginBottom: '12px' }}>
+            <i className="fas fa-list-ol" style={{ color: 'var(--gold-accent)', marginRight: '8px' }}></i>
+            L2 Order Book Depth
+          </h3>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.78rem' }}>
+            {/* Asks (Red) */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginBottom: '8px' }}>
+              {asks.slice().reverse().map((a, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--red-trade)' }}>
+                  <span>{a.price}</span>
+                  <span>{a.qty}</span>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ textAlign: 'center', padding: '4px', background: '#151d2a', color: '#fff', fontWeight: 700, borderRadius: '4px', marginBottom: '8px' }}>
+              Spread Price: ${price}
+            </div>
+
+            {/* Bids (Green) */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              {bids.map((b, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--green-trade)' }}>
+                  <span>{b.price}</span>
+                  <span>{b.qty}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Order Execution Panel Component
+    function OrderExecutionPanel({ symbol, price, orderQty, setOrderQty, onOrder, algoStrategy, setAlgoStrategy }) {
+      return (
+        <div className="cyber-card">
+          <h3 className="font-heading" style={{ fontSize: '0.95rem', color: '#fff', marginBottom: '12px' }}>
+            <i className="fas fa-paper-plane" style={{ color: 'var(--cyan-accent)', marginRight: '8px' }}></i>
+            Order Execution
+          </h3>
+          <div style={{ marginBottom: '12px' }}>
+            <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Algo Strategy Slicer:</label>
+            <select value={algoStrategy} onChange={e => setAlgoStrategy(e.target.value)} style={{ width: '100%', background: '#04060a', border: '1px solid #1a2336', color: '#fff', padding: '6px', borderRadius: '4px', marginTop: '4px', fontSize: '0.8rem' }}>
+              <option value="VWAP">VWAP (Volume-Weighted)</option>
+              <option value="TWAP">TWAP (Time-Weighted)</option>
+              <option value="DIRECT">Direct Limit Match</option>
+            </select>
+          </div>
+
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Order Quantity:</label>
+            <input type="number" step="0.05" value={orderQty} onChange={e => setOrderQty(+e.target.value)} style={{ width: '100%', background: '#04060a', border: '1px solid #1a2336', color: '#fff', padding: '6px', borderRadius: '4px', marginTop: '4px', fontSize: '0.8rem' }} />
+          </div>
+
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button onClick={() => onOrder('BUY')} className="btn-buy" style={{ flex: 1 }}>BUY / LONG</button>
+            <button onClick={() => onOrder('SELL')} className="btn-sell" style={{ flex: 1 }}>SELL / SHORT</button>
+          </div>
+        </div>
+      );
+    }
+
+    // Options Greeks Component
+    function OptionsGreeksCard({ spot }) {
+      const strike = Math.round(spot * 1.02);
+      return (
+        <div className="cyber-card">
+          <h3 className="font-heading" style={{ fontSize: '0.9rem', color: '#fff', marginBottom: '10px' }}>
+            <i className="fas fa-calculator" style={{ color: 'var(--purple-accent)', marginRight: '8px' }}></i>
+            Black-Scholes Options Greeks
+          </h3>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.78rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+            <div>Call Price: <strong style={{ color: 'var(--cyan-accent)' }}>$42.80</strong></div>
+            <div>Implied Vol: <strong>24.5%</strong></div>
+            <div>Delta (Δ): <strong>0.5420</strong></div>
+            <div>Gamma (Γ): <strong>0.0125</strong></div>
+            <div>Vega (V): <strong>0.1850</strong></div>
+            <div>Theta (Θ): <strong>-0.045</strong></div>
+          </div>
+        </div>
+      );
+    }
+
+    // Monte Carlo VaR Component
+    function MonteCarloVaRCard({ portfolio, price }) {
+      return (
+        <div className="cyber-card">
+          <h3 className="font-heading" style={{ fontSize: '0.9rem', color: '#fff', marginBottom: '10px' }}>
+            <i className="fas fa-chart-pie" style={{ color: 'var(--gold-accent)', marginRight: '8px' }}></i>
+            Monte Carlo Portfolio VaR (95%)
+          </h3>
+          <div style={{ fontSize: '0.8rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+              <span>Value at Risk (95%):</span>
+              <strong style={{ color: 'var(--red-trade)', fontFamily: 'var(--font-mono)' }}>-${portfolio.var95}</strong>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+              <span>Sharpe Ratio:</span>
+              <strong style={{ color: 'var(--green-trade)', fontFamily: 'var(--font-mono)' }}>{portfolio.sharpe}</strong>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Unrealized PnL:</span>
+              <strong style={{ color: 'var(--green-trade)', fontFamily: 'var(--font-mono)' }}>+${portfolio.pnl}</strong>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Trade Stream Component
+    function TradeStreamCard({ trades }) {
+      return (
+        <div className="cyber-card">
+          <h3 className="font-heading" style={{ fontSize: '0.9rem', color: '#fff', marginBottom: '10px' }}>
+            <i className="fas fa-stream" style={{ color: 'var(--green-trade)', marginRight: '8px' }}></i>
+            Live Executed Trade Stream
+          </h3>
+          <div style={{ maxHeight: '120px', overflowY: 'auto', fontSize: '0.75rem', fontFamily: 'var(--font-mono)' }}>
+            {trades.length === 0 ? (
+              <div style={{ color: 'var(--text-muted)' }}>No trades executed yet.</div>
+            ) : (
+              trades.map(t => (
+                <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', borderBottom: '1px solid #1a2336', paddingBottom: '2px' }}>
+                  <span style={{ color: t.side === 'BUY' ? 'var(--green-trade)' : 'var(--red-trade)' }}>[{t.side}] {t.symbol}</span>
+                  <span>{t.qty} @ ${t.price}</span>
+                  <span style={{ color: 'var(--text-muted)' }}>{t.time}</span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<FinPulseTerminal />);
+  </script>
+</body>
+</html>

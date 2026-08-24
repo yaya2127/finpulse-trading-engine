@@ -1,0 +1,32 @@
+name: FinPulse Engine CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go 1.22
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.22'
+
+    - name: Verify Go L2 Engine Syntax
+      run: |
+        go build -v ./...
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Run Risk Engine Unit Tests
+      run: |
+        python -m unittest discover tests
