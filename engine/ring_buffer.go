@@ -15,13 +15,15 @@ type OrderMessage struct {
 	Timestamp int64
 }
 
-// LockFreeRingBuffer is a lock-free single-producer single-consumer ring buffer
+// LockFreeRingBuffer is a lock-free single-producer single-consumer ring buffer with 64-byte CPU cache line padding
 type LockFreeRingBuffer struct {
-	buffer []OrderMessage
+	head     uint64
+	_pad1    [56]byte // 64-byte cache line padding to prevent CPU false sharing with tail
+	tail     uint64
+	_pad2    [56]byte // 64-byte cache line padding to prevent CPU false sharing with capacity
 	capacity uint64
 	mask     uint64
-	head     uint64
-	tail     uint64
+	buffer   []OrderMessage
 }
 
 // NewLockFreeRingBuffer initializes a lock-free ring buffer of power-of-two size
