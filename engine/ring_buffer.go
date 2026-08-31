@@ -65,3 +65,5 @@ func (rb *LockFreeRingBuffer) Pop() (OrderMessage, error) {
 	atomic.AddUint64(&rb.head, 1)
 	return msg, nil
 }
+
+<!-- aug31_surge_commit_1 -->
