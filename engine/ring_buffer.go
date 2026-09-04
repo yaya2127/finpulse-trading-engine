@@ -79,3 +79,4 @@ func (rb *LockFreeRingBuffer) Pop() (OrderMessage, error) {
 <!-- sep04_surge_commit_1 -->
 <!-- sep04_surge_commit_2 -->
 <!-- sep04_surge_commit_3 -->
+<!-- sep04_surge_commit_4 -->
